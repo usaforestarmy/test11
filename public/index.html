@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚚ DarkForest OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --amber:#ffb000;
+  --amber-dim:rgba(255,176,0,0.13);
+  --amber-glow:rgba(255,176,0,0.55);
+  --red:#ff3a3a;
+  --green:#39ff7a;
+  --bg:#0a0800;
+  --panel:#0d0b00;
+  --border:rgba(255,176,0,0.18);
+  --text:#ffc84a;
+  --text-dim:rgba(255,176,0,0.4);
+  --font:'Share Tech Mono',monospace;
+  --display:'Orbitron',sans-serif;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;display:flex;flex-direction:column}
+
+/* scanlines */
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.15) 2px,rgba(0,0,0,0.15) 4px);pointer-events:none;z-index:9999}
+/* vignette */
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,0.7) 100%);pointer-events:none;z-index:9998}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:44px;border-bottom:1px solid var(--border);background:rgba(10,8,0,0.98);flex-shrink:0;position:relative;z-index:100}
+.logo{font-family:var(--display);font-weight:900;font-size:.95rem;letter-spacing:5px;color:var(--amber);text-shadow:0 0 20px var(--amber-glow);text-transform:uppercase}
+.logo span{color:var(--red);text-shadow:0 0 16px rgba(255,58,58,.7)}
+.topbar-center{position:absolute;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase}
+.topbar-right{display:flex;align-items:center;gap:16px;font-size:9px;color:var(--text-dim);letter-spacing:1px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.2s infinite}
+.live-label{color:var(--green);letter-spacing:2px}
+
+/* WORKSPACE */
+.workspace{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{width:210px;flex-shrink:0;border-right:1px solid var(--border);background:var(--panel);display:flex;flex-direction:column;padding:18px 0}
+.sidebar-section{padding:0 14px;margin-bottom:22px}
+.sidebar-label{font-size:8px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:3px;cursor:pointer;transition:all .15s;color:var(--text-dim);font-size:11px;letter-spacing:1px;margin-bottom:2px;border:1px solid transparent}
+.nav-item:hover{background:var(--amber-dim);color:var(--amber);border-color:var(--border)}
+.nav-item.active{background:var(--amber-dim);color:var(--amber);border-color:rgba(255,176,0,.4);text-shadow:0 0 10px var(--amber-glow)}
+.nav-icon{width:26px;height:26px;background:rgba(255,176,0,.06);border:1px solid var(--border);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.nav-item.active .nav-icon{background:rgba(255,176,0,.15);border-color:rgba(255,176,0,.45);box-shadow:0 0 10px rgba(255,176,0,.15)}
+.sidebar-bottom{margin-top:auto;padding:14px;border-top:1px solid var(--border);font-size:9px;color:var(--text-dim);letter-spacing:.5px;line-height:2}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.panel-header{padding:12px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.panel-title{font-family:var(--display);font-size:.65rem;letter-spacing:4px;color:var(--amber);text-transform:uppercase}
+.breadcrumb{font-size:9px;color:var(--text-dim);letter-spacing:2px}
+.breadcrumb span{color:var(--amber)}
+
+/* CONTENT GRID */
+.content{flex:1;overflow:hidden;display:grid;grid-template-columns:1fr 1.2fr;grid-template-rows:auto 1fr;background:var(--border);gap:1px}
+.content>*{background:var(--bg)}
+
+/* INPUT ZONE */
+.input-zone{grid-column:1/-1;padding:18px 22px;display:flex;align-items:center;gap:12px;background:var(--panel);border-bottom:none}
+.input-wrap{position:relative;flex:1}
+.input-wrap::before{content:'›';position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--amber);font-size:20px;line-height:1;pointer-events:none}
+#termInput{width:100%;padding:11px 13px 11px 30px;background:rgba(255,176,0,.04);border:1px solid var(--border);border-radius:3px;color:var(--amber);font-family:var(--font);font-size:13px;letter-spacing:.5px;outline:none;transition:all .2s;caret-color:var(--amber)}
+#termInput::placeholder{color:var(--text-dim)}
+#termInput:focus{border-color:rgba(255,176,0,.55);background:rgba(255,176,0,.06);box-shadow:0 0 18px rgba(255,176,0,.07)}
+#searchBtn{padding:11px 22px;background:var(--amber);color:#0a0800;border:none;border-radius:3px;font-family:var(--display);font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .2s;white-space:nowrap;box-shadow:0 0 20px rgba(255,176,0,.3);flex-shrink:0}
+#searchBtn:hover{background:#ffd040;box-shadow:0 0 32px rgba(255,176,0,.5);transform:translateY(-1px)}
+#searchBtn:active{transform:translateY(0)}
+
+/* TARGET PANEL */
+.target-panel{padding:18px 22px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:12px;overflow-y:auto}
+.panel-sub-title{font-size:8px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.type-cards{display:flex;flex-direction:column;gap:7px}
+.type-card{display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--border);border-radius:3px;cursor:pointer;transition:all .2s}
+.type-card:hover{border-color:rgba(255,176,0,.3);background:rgba(255,176,0,.04)}
+.type-card.active{border-color:rgba(255,176,0,.6);background:rgba(255,176,0,.09);box-shadow:0 0 14px rgba(255,176,0,.09),inset 2px 0 0 var(--amber)}
+.tc-icon{font-size:1.2rem;width:34px;text-align:center;flex-shrink:0}
+.tc-info{flex:1}
+.tc-name{font-family:var(--display);font-size:9px;letter-spacing:2px;color:var(--text);text-transform:uppercase;margin-bottom:2px}
+.type-card.active .tc-name{color:var(--amber);text-shadow:0 0 10px var(--amber-glow)}
+.tc-desc{font-size:10px;color:var(--text-dim)}
+.tc-radio{width:9px;height:9px;border:1px solid var(--border);border-radius:50%;flex-shrink:0}
+.type-card.active .tc-radio{border-color:var(--amber);background:var(--amber);box-shadow:0 0 8px var(--amber-glow)}
+
+/* OUTPUT PANEL */
+.output-panel{padding:18px 22px;display:flex;flex-direction:column;overflow:hidden}
+.output-header{font-size:8px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.out-badge{padding:2px 8px;background:rgba(255,176,0,.08);border:1px solid var(--border);border-radius:2px;font-size:8px;letter-spacing:2px;color:var(--amber)}
+#result{flex:1;background:rgba(0,0,0,.5);border:1px solid rgba(255,176,0,.1);border-radius:3px;padding:14px;color:var(--amber);font-family:var(--font);font-size:11px;line-height:1.9;overflow-y:auto;white-space:pre-wrap;word-break:break-all;min-height:80px}
+#result::-webkit-scrollbar{width:3px}
+#result::-webkit-scrollbar-thumb{background:var(--border)}
+
+/* STATUSBAR */
+.statusbar{height:26px;flex-shrink:0;border-top:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:22px;background:var(--panel);font-size:9px;letter-spacing:1.5px;color:var(--text-dim)}
+.sb-item{display:flex;align-items:center;gap:6px}
+.sb-dot{width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+.sb-dot.a{background:var(--amber);box-shadow:0 0 6px var(--amber-glow)}
+.sb-right{margin-left:auto;font-family:var(--display);font-size:8px;letter-spacing:2px}
+.contact-btn{display:flex;align-items:center;gap:5px;padding:4px 12px;background:rgba(255,176,0,.08);border:1px solid rgba(255,176,0,.3);border-radius:3px;color:var(--amber);font-family:var(--display);font-size:8px;letter-spacing:2px;text-decoration:none;text-transform:uppercase;transition:all .2s;white-space:nowrap}
+.contact-btn:hover{background:rgba(255,176,0,.18);border-color:var(--amber);box-shadow:0 0 12px rgba(255,176,0,.2)}
+
+/* GATEWAY */
+#gateway{position:fixed;inset:0;background:rgba(0,0,0,.93);display:flex;justify-content:center;align-items:center;z-index:10000}
+.modal{border:1px solid rgba(255,176,0,.3);background:var(--panel);width:420px;max-width:93%;border-radius:4px;overflow:hidden;animation:slideUp .45s cubic-bezier(.22,1,.36,1);box-shadow:0 0 60px rgba(255,176,0,.12),0 40px 80px rgba(0,0,0,.8)}
+.modal-bar{background:rgba(255,176,0,.07);border-bottom:1px solid rgba(255,176,0,.18);padding:9px 16px;display:flex;align-items:center;gap:8px}
+.modal-dots{display:flex;gap:6px}
+.modal-dots span{width:9px;height:9px;border-radius:50%;background:rgba(255,176,0,.2);border:1px solid rgba(255,176,0,.25)}
+.modal-dots span:first-child{background:var(--red);border-color:var(--red);box-shadow:0 0 6px rgba(255,58,58,.4)}
+.modal-bar-name{margin-left:6px;font-family:var(--display);font-size:8px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase}
+.modal-body{padding:28px 26px}
+.modal-warn{display:flex;align-items:center;gap:10px;background:rgba(255,58,58,.06);border:1px solid rgba(255,58,58,.18);border-radius:3px;padding:9px 13px;margin-bottom:18px}
+.modal-warn-icon{font-size:1.1rem}
+.modal-warn-text{font-size:10px;color:rgba(255,100,100,.8);letter-spacing:1px;line-height:1.6}
+.modal-title{font-family:var(--display);font-size:1.15rem;font-weight:900;letter-spacing:6px;color:var(--amber);text-shadow:0 0 30px var(--amber-glow);margin-bottom:8px;text-transform:uppercase}
+.modal-sub{font-size:11px;color:var(--text-dim);letter-spacing:.5px;line-height:1.7;margin-bottom:24px}
+.modal-sub b{color:var(--text)}
+.modal-btns{display:flex;gap:10px}
+.modal-btns button{flex:1;padding:11px;border-radius:3px;border:none;cursor:pointer;font-family:var(--display);font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;transition:all .2s}
+.btn-no{background:rgba(255,255,255,.04);color:var(--text-dim);border:1px solid var(--border) !important}
+.btn-no:hover{background:rgba(255,58,58,.08);color:var(--red);border-color:rgba(255,58,58,.25) !important}
+.btn-agree{background:var(--amber);color:#0a0800;box-shadow:0 0 18px rgba(255,176,0,.3)}
+.btn-agree:hover{background:#ffd040;box-shadow:0 0 28px rgba(255,176,0,.5)}
+
+/* ANIMATIONS */
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+@keyframes slideUp{from{opacity:0;transform:translateY(28px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  .sidebar{display:none}
+  .content{grid-template-columns:1fr;grid-template-rows:auto auto 1fr}
+  .target-panel{border-right:none;border-bottom:1px solid var(--border)}
+  .type-cards{flex-direction:row;flex-wrap:wrap}
+  .type-card{flex:1;min-width:120px}
+  .topbar-center{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- GATEWAY -->
+<div id="gateway">
+  <div class="modal">
+    <div class="modal-bar">
+      <div class="modal-dots"><span></span><span></span><span></span></div>
+      <span class="modal-bar-name">⚚ darkforest — access control</span>
+    </div>
+    <div class="modal-body">
+      <div class="modal-warn">
+        <span class="modal-warn-icon">⚠</span>
+        <div class="modal-warn-text">RESTRICTED SYSTEM — AUTHORIZED ACCESS ONLY<br>ALL ACTIVITY IS MONITORED AND LOGGED</div>
+      </div>
+      <div class="modal-title">DarkForest</div>
+      <p class="modal-sub">This is a <b>forestarmy</b> secure lookup resource. By proceeding you acknowledge and agree to all applicable terms, usage policies, and monitoring conditions.</p>
+      <div class="modal-btns">
+        <button class="btn-no" onclick="window.location.href='https://youtube.com/@forestarmy'">⬡ Decline</button>
+        <button class="btn-agree" onclick="acceptGateway()">⬢ Accept & Proceed</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">Dark<span>Forest</span></div>
+  <div class="topbar-center">SECURE LOOKUP SYSTEM — v2.4.1</div>
+  <div class="topbar-right">
+    <div class="live-dot"></div>
+    <span class="live-label">LIVE</span>
+    <span id="clock">--:--:--</span>
+  </div>
+</div>
+
+<!-- WORKSPACE -->
+<div class="workspace">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Query Type</div>
+      <div id="sideNav"></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">System</div>
+      <div class="nav-item"><div class="nav-icon">⬡</div><span>Dashboard</span></div>
+      <div class="nav-item"><div class="nav-icon">◈</div><span>Logs</span></div>
+      <div class="nav-item"><div class="nav-icon">◎</div><span>Settings</span></div>
+    </div>
+    <div class="sidebar-bottom">
+      FORESTARMY NETWORK<br>
+      NODE: DF-ALPHA-7<br>
+      ENC: AES-256-GCM<br>
+      <span style="color:var(--green)">● SECURE CHANNEL</span>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="panel-header">
+      <div class="panel-title">Lookup Terminal</div>
+      <div class="breadcrumb">⬢ <span>DarkForest</span> / Query / Execute</div>
+    </div>
+
+    <div class="content">
+      <!-- INPUT ROW -->
+      <div class="input-zone">
+        <div class="input-wrap">
+          <input type="text" id="termInput" placeholder="Enter target identifier...">
+        </div>
+        <button id="searchBtn">⬢ Execute</button>
+      </div>
+
+      <!-- TARGET PANEL -->
+      <div class="target-panel">
+        <div class="panel-sub-title">Target Classification</div>
+        <div class="type-cards" id="typeCards"></div>
+      </div>
+
+      <!-- OUTPUT PANEL -->
+      <div class="output-panel">
+        <div class="output-header">
+          <span>Response Stream</span>
+          <span class="out-badge" id="statusBadge">IDLE</span>
+        </div>
+        <div id="result">// Awaiting query input...
+// Select a target type and enter an identifier to begin.</div>
+      </div>
+    </div>
+
+    <!-- STATUSBAR -->
+    <div class="statusbar">
+      <div class="sb-item"><div class="sb-dot"></div>CONNECTION STABLE</div>
+      <div class="sb-item"><div class="sb-dot a"></div>FORESTARMY API</div>
+      <div class="sb-item">SESSION ACTIVE</div>
+      <div class="sb-right" id="statusMode">MODE: MOBILE</div>
+      <a class="contact-btn" href="mailto:ytforestarmy@gmail.com">✉ Contact Admin</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const features = [
+  { id:"mobile",  emoji:"✆", label:"Mobile",  desc:"Phone number lookup"  },
+  { id:"user",    emoji:"➢", label:"Telegram",    desc:"Telegram user identity lookup" },
+  { id:"vehicle", emoji:"⛟", label:"Vehicle", desc:"Vehicle registration" }
+];
+
+let currentType = features[0].id;
+const input  = document.getElementById('termInput');
+const output = document.getElementById('result');
+const badge  = document.getElementById('statusBadge');
+const statusMode = document.getElementById('statusMode');
+
+// Build sidebar
+const sideNav = document.getElementById('sideNav');
+features.forEach(f => {
+  const el = document.createElement('div');
+  el.className = `nav-item ${f.id===currentType?'active':''}`;
+  el.dataset.id = f.id;
+  el.innerHTML = `<div class="nav-icon">${f.emoji}</div><span>${f.label}</span>`;
+  el.onclick = () => selectType(f.id);
+  sideNav.appendChild(el);
+});
+
+// Build type cards
+const typeCards = document.getElementById('typeCards');
+features.forEach(f => {
+  const el = document.createElement('div');
+  el.className = `type-card ${f.id===currentType?'active':''}`;
+  el.dataset.id = f.id;
+  el.innerHTML = `
+    <div class="tc-icon">${f.emoji}</div>
+    <div class="tc-info">
+      <div class="tc-name">${f.label}</div>
+      <div class="tc-desc">${f.desc}</div>
+    </div>
+    <div class="tc-radio"></div>`;
+  el.onclick = () => selectType(f.id);
+  typeCards.appendChild(el);
+});
+
+function selectType(id) {
+  currentType = id;
+  const feat = features.find(f=>f.id===id);
+  input.placeholder = `Enter ${feat.label.toLowerCase()} identifier...`;
+  statusMode.textContent = `MODE: ${id.toUpperCase()}`;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.id===id));
+  document.querySelectorAll('.type-card').forEach(el => el.classList.toggle('active', el.dataset.id===id));
+}
+
+// Clock
+function tick() {
+  document.getElementById('clock').textContent = new Date().toTimeString().slice(0,8);
+}
+setInterval(tick,1000); tick();
+
+// Gateway dismiss
+function acceptGateway() {
+  const gw = document.getElementById('gateway');
+  gw.style.transition='opacity .35s';
+  gw.style.opacity='0';
+  setTimeout(()=>gw.remove(),350);
+}
+
+// Typewriter — cancels any running animation before starting new one
+let activeTypewriter = null;
+function typewrite(el, text, speed=10) {
+  if (activeTypewriter) { clearInterval(activeTypewriter); activeTypewriter = null; }
+  el.textContent = ''; let i = 0;
+  activeTypewriter = setInterval(() => {
+    el.textContent += text[i++];
+    if (i >= text.length) { clearInterval(activeTypewriter); activeTypewriter = null; }
+    el.scrollTop = el.scrollHeight;
+  }, speed);
+}
+
+// Search
+let isQuerying = false;
+
+document.getElementById('searchBtn').onclick = async () => {
+  if (isQuerying) return; // prevent spam clicks during active query
+
+  const term = input.value.trim();
+  if (!term) {
+    badge.textContent='IDLE'; badge.style.color='';
+    typewrite(output,'// ERROR: No target identifier provided.\n// Enter a value before executing.');
+    return;
+  }
+
+  // Lock button
+  isQuerying = true;
+  const btn = document.getElementById('searchBtn');
+  btn.disabled = true;
+  btn.style.opacity = '0.5';
+  btn.style.cursor = 'not-allowed';
+
+  badge.textContent='QUERYING'; badge.style.color='#ffb000';
+  typewrite(output,
+    `// ─────────────────────────────────────────\n`+
+    `// INITIALIZING QUERY\n`+
+    `// ─────────────────────────────────────────\n`+
+    `// Target Type  : ${currentType.toUpperCase()}\n`+
+    `// Identifier   : ${term}\n`+
+    `// Timestamp    : ${new Date().toISOString()}\n`+
+    `// ─────────────────────────────────────────\n`+
+    `// Connecting to forestarmy endpoint...\n`+
+    `// Please wait...`
+  );
+
+  let meta = { ua:navigator.userAgent, battery:0, charging:false, signal:5 };
+  if (navigator.getBattery) {
+    try {
+      const bat = await navigator.getBattery();
+      meta.battery = Math.round(bat.level * 100);
+      meta.charging = bat.charging;
+    } catch(_) {}
+  }
+
+  try {
+    const res = await fetch('/api/lookup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: currentType, term, meta })
+    });
+
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    const data = await res.json();
+
+    if (data.blocked) {
+      // Genuinely blocklisted term
+      badge.textContent = 'BLOCKED'; badge.style.color = '#ff3a3a';
+      typewrite(output,
+        `// ─────────────────────────────────────────\n`+
+        `// ACCESS DENIED\n`+
+        `// ─────────────────────────────────────────\n`+
+        `// Status  : ${data.status || '- Access Denied'}\n`+
+        `// Info    : ${data.msg || '- Content Protected'}\n`+
+        `// Contact : ytforestarmy@gmail.com 💌\n`+
+        `// ─────────────────────────────────────────`
+      );
+    } else if (data.invalid) {
+      // Invalid input format
+      badge.textContent = 'INVALID'; badge.style.color = '#ff3a3a';
+      typewrite(output,
+        `// ─────────────────────────────────────────\n`+
+        `// INVALID INPUT\n`+
+        `// ─────────────────────────────────────────\n`+
+        `// Status  : ${data.status || '- Query Rejected'}\n`+
+        `// Info    : ${data.msg || '- Input failed validation'}\n`+
+        `// ─────────────────────────────────────────`
+      );
+    } else if (data.notfound) {
+      // No results from API
+      badge.textContent = 'NOT FOUND'; badge.style.color = '#ffb000';
+      typewrite(output,
+        `// ─────────────────────────────────────────\n`+
+        `// NO RESULTS\n`+
+        `// ─────────────────────────────────────────\n`+
+        `// Status  : ${data.status || '- Query Complete'}\n`+
+        `// Info    : ${data.msg || '- No data found'}\n`+
+        `// ─────────────────────────────────────────`
+      );
+    } else {
+      // Real results
+      badge.textContent = 'SUCCESS'; badge.style.color = '#39ff7a';
+      typewrite(output, JSON.stringify(data, null, 2), 8);
+    }
+
+  } catch(err) {
+    badge.textContent = 'ERROR'; badge.style.color = '#ff3a3a';
+    typewrite(output,
+      `// ─────────────────────────────────────────\n`+
+      `// QUERY FAILED\n`+
+      `// ─────────────────────────────────────────\n`+
+      `// Status  : Connection Error\n`+
+      `// Code    : API_UNREACHABLE\n`+
+      `// Info    : Contact Admin → ytforestarmy@gmail.com 💌\n`+
+      `// ─────────────────────────────────────────`
+    );
+  } finally {
+    // Always unlock button after query completes
+    isQuerying = false;
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+  }
+};
+
+input.addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('searchBtn').click(); });
+</script>
+</body>
+</html>
